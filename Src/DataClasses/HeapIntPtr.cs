@@ -25,7 +25,7 @@ using System.Runtime.InteropServices;
 
 namespace SAE.J2534
 {
-    internal class HeapIntPtr : Common.FullDisposable
+    internal class HeapIntPtr : IDisposable
     {
         public IntPtr Ptr { get; }
         public HeapIntPtr()
@@ -36,9 +36,41 @@ namespace SAE.J2534
         {
             return Marshal.ReadIntPtr(HeapIntPtr.Ptr);
         }
-        protected override void DisposeUnmanaged()
+
+    #region IDisposable Support
+    private bool disposedValue = false; // To detect redundant calls
+
+    protected virtual void Dispose(bool disposing)
+    {
+      if (!disposedValue)
+      {
+        if (disposing)
         {
-            Marshal.FreeHGlobal(Ptr);
+          // TODO: dispose managed state (managed objects).
         }
+
+        // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+        // TODO: set large fields to null.
+        Marshal.FreeHGlobal(Ptr);
+
+        disposedValue = true;
+      }
     }
+
+    // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+    ~HeapIntPtr() {
+      // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+      Dispose(false);
+    }
+
+    // This code added to correctly implement the disposable pattern.
+    public void Dispose()
+    {
+      // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+      Dispose(true);
+      // TODO: uncomment the following line if the finalizer is overridden above.
+      GC.SuppressFinalize(this);
+    }
+    #endregion
+  }
 }
