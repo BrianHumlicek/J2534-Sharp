@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("J2534-Sharp")]
-[assembly: AssemblyCopyright("Copyright 2018 Brian Humlicek")]
+[assembly: AssemblyCopyright("Copyright 2023 Brian Humlicek")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
