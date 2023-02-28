@@ -133,7 +133,7 @@ namespace SAE.J2534
                     if (Result == ResultCode.STATUS_NOERROR)
                         return hErrorDescription.ToString();
                     else
-                        return $"GetLastError failed with result: {Result.ToString()}";
+                        return null;
                 }
             }
         }
