@@ -37,7 +37,7 @@ namespace SAE.J2534
             FlagsAsInt = (int)TxFlags;
             this.Data = Data;
         }
-        public Message(byte[] Data, RxFlag RxFlags, uint TimeStamp)
+        public Message(byte[] Data, RxFlag RxFlags, uint Timestamp)
         {
             this.Data = Data;
             FlagsAsInt = (int)RxFlags;
