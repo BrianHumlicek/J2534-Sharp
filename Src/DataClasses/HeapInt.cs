@@ -1,5 +1,5 @@
 ﻿#region License
-/*Copyright(c) 2018, Brian Humlicek
+/*Copyright(c) 2023, Brian Humlicek
 * https://github.com/BrianHumlicek
 * 
 *Permission is hereby granted, free of charge, to any person obtaining a copy
