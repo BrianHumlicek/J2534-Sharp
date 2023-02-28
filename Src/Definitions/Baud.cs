@@ -88,6 +88,9 @@ namespace SAE.J2534
         [Description("500kbps")]
         CAN_500000 = 500000,
 
+        [Description("GM LAN 33.333kbps")]
+        GMLAN_33333 = 33333,
+
         [Description("500kbps")]
         ISO15765 = 500000,
         [Description("125kbps")]
