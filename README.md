@@ -1,5 +1,7 @@
 ### J2534-Sharp ###
 
+This is now a legacy project.  The current project is now J2534-Sharp.Core in the main/master branch.
+
 J2534-Sharp handles all the details of operating with unmanaged SAE J2534 spec library and lets you deal with the important stuff.
 
 Available on NuGet! [NuGet Gallery: J2534-Sharp]
