@@ -44,7 +44,7 @@ jobs:
         echo "VERSION=$version" >> $env:GITHUB_OUTPUT
         
     - name: Pack NuGet package
-      run: nuget pack J2534-Sharp.nuspec -Version ${{ steps.version.outputs.VERSION }} -Properties configuration=Release
+      run: nuget pack J2534-Sharp.nuspec -Version ${{ steps.version.outputs.VERSION }} -Properties configuration=Release -BasePath Src
       
     - name: Publish to NuGet.org
       if: startsWith(github.ref, 'refs/tags/v1.')
