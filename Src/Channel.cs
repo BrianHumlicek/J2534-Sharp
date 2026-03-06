@@ -265,15 +265,11 @@ namespace SAE.J2534
         /// </summary>
         /// <param name="Parameter">Parameter to return</param>
         /// <returns>Parameter value</returns>
-        public int GetConfig(Parameter Parameter) => GetConfig(Parameter, IOCTL.GET_CONFIG);
-        public int GetConfig(Parameter Parameter, IOCTL IOCTL)
+        public int GetConfig(Parameter Parameter)
         {
             using (HeapSConfigArray hSConfigArray = new HeapSConfigArray(new SConfig(Parameter, 0)))
             {
-                lock (sync)
-                {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL, (IntPtr)hSConfigArray, IntPtr.Zero));
-                }
+                IOControl(IOCTL.GET_CONFIG, (IntPtr)hSConfigArray, IntPtr.Zero);
                 return hSConfigArray[0].Value;
             }
         }
@@ -282,15 +278,11 @@ namespace SAE.J2534
         /// </summary>
         /// <param name="Parameter">Parameter to set</param>
         /// <param name="Value">Parameter value</param>
-        public void SetConfig(Parameter Parameter, int Value) => SetConfig(Parameter, Value, IOCTL.SET_CONFIG);
-        public void SetConfig(Parameter Parameter, int Value, IOCTL IOCTL)
+        public void SetConfig(Parameter Parameter, int Value)
         {
             using (HeapSConfigArray hSConfigList = new HeapSConfigArray(new SConfig(Parameter, Value)))
             {
-                lock (sync)
-                {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL, (IntPtr)hSConfigList, IntPtr.Zero));
-                }
+                IOControl(IOCTL.SET_CONFIG, (IntPtr)hSConfigList, IntPtr.Zero);
             }
         }
         /// <summary>
@@ -298,15 +290,11 @@ namespace SAE.J2534
         /// </summary>
         /// <param name="Parameter">List of parameters to get</param>
         /// <returns>Parameter list</returns>
-        public SConfig[] GetConfig(SConfig[] SConfig) => GetConfig(SConfig, IOCTL.GET_CONFIG);
-        public SConfig[] GetConfig(SConfig[] SConfig, IOCTL IOCTL)
+        public SConfig[] GetConfig(SConfig[] SConfig)
         {
             using (HeapSConfigArray hSConfigArray = new HeapSConfigArray(SConfig))
             {
-                lock (sync)
-                {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL, (IntPtr)hSConfigArray, IntPtr.Zero));
-                }
+                IOControl(IOCTL.GET_CONFIG, (IntPtr)hSConfigArray, IntPtr.Zero);
                 return hSConfigArray.ToArray();
             }
         }
@@ -314,15 +302,11 @@ namespace SAE.J2534
         /// Sets a list of configuration parameters for the channel
         /// </summary>
         /// <param name="Parameter">List of parameters to set</param>
-        public void SetConfig(SConfig[] SConfig) => SetConfig(SConfig, IOCTL.SET_CONFIG);
-        public void SetConfig(SConfig[] SConfig, IOCTL IOCTL)
+        public void SetConfig(SConfig[] SConfig)
         {
             using (HeapSConfigArray hSConfigList = new HeapSConfigArray(SConfig))
             {
-                lock (sync)
-                {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL, (IntPtr)hSConfigList, IntPtr.Zero));
-                }
+                IOControl(IOCTL.SET_CONFIG, (IntPtr)hSConfigList, IntPtr.Zero);
             }
         }
         /// <summary>
@@ -330,30 +314,21 @@ namespace SAE.J2534
         /// </summary>
         public void ClearTxBuffer()
         {
-            lock (sync)
-            {
-                API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.CLEAR_TX_BUFFER, IntPtr.Zero, IntPtr.Zero));
-            }
+            IOControl(IOCTL.CLEAR_TX_BUFFER, IntPtr.Zero, IntPtr.Zero);
         }
         /// <summary>
         /// Empties the receive buffer for this channel
         /// </summary>
         public void ClearRxBuffer()
         {
-            lock (sync)
-            {
-                API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.CLEAR_RX_BUFFER, IntPtr.Zero, IntPtr.Zero));
-            }
+            IOControl(IOCTL.CLEAR_RX_BUFFER, IntPtr.Zero, IntPtr.Zero);
         }
         /// <summary>
         /// Stops and clears any periodic messages that have been configured for this channel
         /// </summary>
         public void ClearPeriodicMsgs()
         {
-            lock (sync)
-            {
-                API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.CLEAR_PERIODIC_MSGS, IntPtr.Zero, IntPtr.Zero));
-            }
+            IOControl(IOCTL.CLEAR_PERIODIC_MSGS, IntPtr.Zero, IntPtr.Zero);
         }
         /// <summary>
         /// Stops and clears any message filters that have been configured for this channel
@@ -362,7 +337,7 @@ namespace SAE.J2534
         {
             lock (sync)
             {
-                API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.CLEAR_MSG_FILTERS, IntPtr.Zero, IntPtr.Zero));
+                IOControl(IOCTL.CLEAR_MSG_FILTERS, IntPtr.Zero, IntPtr.Zero);
                 filterList.Clear();
             }
         }
@@ -371,10 +346,7 @@ namespace SAE.J2534
         /// </summary>
         public void ClearFunctMsgLookupTable()
         {
-            lock (sync)
-            {
-                API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.CLEAR_FUNCT_MSG_LOOKUP_TABLE, IntPtr.Zero, IntPtr.Zero));
-            }
+            IOControl(IOCTL.CLEAR_FUNCT_MSG_LOOKUP_TABLE, IntPtr.Zero, IntPtr.Zero);
         }
         /// <summary>
         /// Starts a functional message address filter for this channel
@@ -384,10 +356,7 @@ namespace SAE.J2534
         {
             using (HeapSByteArray hSByteArray = new HeapSByteArray(Addr))
             {
-                lock (sync)
-                {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.ADD_TO_FUNCT_MSG_LOOKUP_TABLE, (IntPtr)hSByteArray, IntPtr.Zero));
-                }
+                IOControl(IOCTL.ADD_TO_FUNCT_MSG_LOOKUP_TABLE, (IntPtr)hSByteArray, IntPtr.Zero);
             }
         }
         /// <summary>
@@ -398,10 +367,7 @@ namespace SAE.J2534
         {
             using (HeapSByteArray hSByteArray = new HeapSByteArray(AddressList.ToArray()))
             {
-                lock (sync)
-                {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.ADD_TO_FUNCT_MSG_LOOKUP_TABLE, (IntPtr)hSByteArray, IntPtr.Zero));
-                }
+                IOControl(IOCTL.ADD_TO_FUNCT_MSG_LOOKUP_TABLE, (IntPtr)hSByteArray, IntPtr.Zero);
             }
         }
         /// <summary>
@@ -412,10 +378,7 @@ namespace SAE.J2534
         {
             using (HeapSByteArray hSByteArray = new HeapSByteArray(Addr))
             {
-                lock (sync)
-                {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE, (IntPtr)hSByteArray, IntPtr.Zero));
-                }
+                IOControl(IOCTL.DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE, (IntPtr)hSByteArray, IntPtr.Zero);
             }
         }
         /// <summary>
@@ -426,10 +389,7 @@ namespace SAE.J2534
         {
             using (HeapSByteArray hSByteArray = new HeapSByteArray(AddressList.ToArray()))
             {
-                lock (sync)
-                {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE, (IntPtr)hSByteArray, IntPtr.Zero));
-                }
+                IOControl(IOCTL.DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE, (IntPtr)hSByteArray, IntPtr.Zero);
             }
         }
         /// <summary>
@@ -442,10 +402,7 @@ namespace SAE.J2534
             using (HeapSByteArray hInput = new HeapSByteArray(new byte[] { TargetAddress }))
             using (HeapSByteArray hOutput = new HeapSByteArray(new byte[2]))
             {
-                lock (sync)
-                {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.FIVE_BAUD_INIT, (IntPtr)hInput, (IntPtr)hOutput));
-                }
+                IOControl(IOCTL.FIVE_BAUD_INIT, (IntPtr)hInput, (IntPtr)hOutput);
                 return hOutput.ToSByteArray();
             }
         }
@@ -459,11 +416,15 @@ namespace SAE.J2534
             using (HeapMessage hInput = new HeapMessage(ProtocolID, TxMessage.TxFlags, TxMessage.Data))
             using (HeapMessage hOutput = new HeapMessage(ProtocolID))
             {
-                lock (sync)
-                {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.FAST_INIT, (IntPtr)hInput, (IntPtr)hOutput));
-                }
+                IOControl(IOCTL.FAST_INIT, (IntPtr)hInput, (IntPtr)hOutput);
                 return hOutput.ToMessage();
+            }
+        }
+        public void IOControl(IOCTL IOCTL, IntPtr Input, IntPtr Output)
+        {
+            lock (sync)
+            {
+                API.CheckResult(API.PTIoctl(channelId, (int)IOCTL, Input, Output));
             }
         }
         /// <summary>
