@@ -47,7 +47,7 @@
 
 namespace SAE.J2534
 {
-    enum IOCTL
+    public enum IOCTL
     {
         GET_CONFIG = 0x01,
         SET_CONFIG = 0x02,

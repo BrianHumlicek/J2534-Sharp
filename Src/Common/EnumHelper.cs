@@ -1,24 +1,23 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Linq;
+using System.Reflection;
 
 namespace Common
 {
-    public class EnumHelper
+    public static class EnumHelper
     {
         public static string GetTypeDescription(Enum enumeration)
         {
-            var enumerationtype = enumeration.GetType();
-            var attribute = enumerationtype.GetCustomAttributes(typeof(DescriptionAttribute), false).FirstOrDefault();
-            return ((DescriptionAttribute)attribute)?.Description ?? enumerationtype.ToString();
+            var enumerationType = enumeration.GetType();
+            var attribute = enumerationType.GetCustomAttribute<DescriptionAttribute>();
+            return attribute?.Description ?? enumerationType.ToString();
         }
 
         public static string GetMemberDescription(Enum enumeration)
         {
-            string enumerationString = enumeration.ToString();
-            var member = enumeration.GetType().GetMember(enumerationString).First();
-            var attribute = member.GetCustomAttributes(typeof(DescriptionAttribute), false).FirstOrDefault();
-            return ((DescriptionAttribute)attribute)?.Description ?? enumerationString;
+            var member = enumeration.GetType().GetMember(enumeration.ToString())[0];
+            var attribute = member.GetCustomAttribute<DescriptionAttribute>();
+            return attribute?.Description ?? enumeration.ToString();
         }
     }
 }

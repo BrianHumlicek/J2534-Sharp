@@ -1,5 +1,5 @@
-﻿#region License
-/*Copyright(c) 2023, Brian Humlicek
+#region License
+/*Copyright(c) 2024, Brian Humlicek
 * https://github.com/BrianHumlicek
 * 
 *Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,20 +20,44 @@
 *SOFTWARE.
 */
 #endregion License
+using System.Text;
 
 namespace SAE.J2534
 {
-    public class PeriodicMessage : Message
+    /// <summary>
+    /// Represents the capabilities of a loaded J2534 API.
+    /// </summary>
+    public sealed class API_Signature
     {
-        public int MessageID { get; set; }
-        public int Interval { get; }
-        public PeriodicMessage(int Interval, byte[] Data) : base(Data)
+        internal SAE_API SAE_API { get; set; }
+        public DrewTech_API DREWTECH_API { get; set; }
+
+        public API_Signature()
         {
-            this.Interval = Interval;
+            SAE_API = SAE_API.NONE;
+            DREWTECH_API = DrewTech_API.NONE;
         }
-        public PeriodicMessage(int Interval, byte[] Data, TxFlag TxFlags) : base(Data, TxFlags)
+
+        public override string ToString()
         {
-            this.Interval = Interval;
+            var builder = new StringBuilder();
+
+            if (DREWTECH_API != DrewTech_API.NONE)
+                builder.Append("DREWTECH ");
+            else if (SAE_API != SAE_API.NONE)
+                builder.Append("SAE ");
+            else
+                return "NO J2534 API DETECTED";
+
+            builder.Append(SAE_API switch
+            {
+                SAE_API.V202_SIGNATURE => "J2534 v2.02",
+                SAE_API.V404_SIGNATURE => "J2534 v4.04",
+                SAE_API.V500_SIGNATURE => "J2534 v5.00",
+                _ => "UNKNOWN API"
+            });
+
+            return builder.ToString();
         }
     }
 }

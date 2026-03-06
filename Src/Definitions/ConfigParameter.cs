@@ -47,7 +47,7 @@
 
 namespace SAE.J2534
 {
-    public enum Parameter
+    public enum ConfigParameter
     {
         DATA_RATE = 0x01,
         LOOP_BACK = 0x03,

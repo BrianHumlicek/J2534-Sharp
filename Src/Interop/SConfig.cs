@@ -20,25 +20,22 @@
 *SOFTWARE.
 */
 #endregion License
-using System;
 using System.Runtime.InteropServices;
 
 namespace SAE.J2534
 {
-    internal class HeapIntPtr : Common.UnmanagedDisposable
+    [StructLayout(LayoutKind.Explicit)]
+    public struct SConfig
     {
-        public IntPtr Ptr { get; }
-        public HeapIntPtr()
+        [FieldOffset(0), MarshalAs(UnmanagedType.U4)]
+        public ConfigParameter Parameter;
+        [FieldOffset(4), MarshalAs(UnmanagedType.U4)]
+        public int Value;
+
+        public SConfig(ConfigParameter parameter, int value)
         {
-            Ptr = Marshal.AllocHGlobal(4);
-        }
-        public static explicit operator IntPtr(HeapIntPtr HeapIntPtr)
-        {
-            return Marshal.ReadIntPtr(HeapIntPtr.Ptr);
-        }
-        protected override void DisposeUnmanaged()
-        {
-            Marshal.FreeHGlobal(Ptr);
+            this.Parameter = parameter;
+            this.Value = value;
         }
     }
 }

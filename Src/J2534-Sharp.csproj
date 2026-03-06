@@ -1,120 +1,66 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <BaseIntermediateOutputPath>$(SolutionDir)\obj\</BaseIntermediateOutputPath>
-  </PropertyGroup>
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{D99E0DE7-2F06-41E3-B33E-687E1B425A7F}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
     <RootNamespace>SAE.J2534</RootNamespace>
     <AssemblyName>J2534-Sharp</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation />
-    <TargetFrameworkProfile />
+    <LangVersion>12.0</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>CS1591</NoWarn>
+    <Version></Version>
+    <Authors>Brian Humlicek</Authors>
+    <Description>High-performance J2534 PassThru API wrapper for .NET Core</Description>
+
+    <!-- Prevent auto-inclusion of files from subdirectory projects -->
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <EnableDefaultItems>true</EnableDefaultItems>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Copyright>Copyright 2026 Brian Humlicek.  All rights reserved.</Copyright>
+    <Title>SAE J2534 Library</Title>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>J2534;2534;OBD;OBD-II;SAE;Diagnostics;Drewtech;CarDAQ</PackageTags>
+    <PackageIcon>car-diagnostics-icon-01-.jpg</PackageIcon>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/BrianHumlicek/J2534-Sharp</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageId>J2534-Sharp.Core</PackageId>
+    <PackageProjectUrl>https://github.com/BrianHumlicek/J2534-Sharp</PackageProjectUrl>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(SolutionDir)\bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
-    <LangVersion>7.1</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(SolutionDir)\bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <Prefer32Bit>false</Prefer32Bit>
-    <DocumentationFile>..\bin\Release\J2534-Sharp.XML</DocumentationFile>
-    <LangVersion>7.1</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
+
+  <!-- Explicitly exclude subdirectory projects to prevent conflicts -->
   <ItemGroup>
-    <Reference Include="System" />
+    <Compile Remove="J2534Remote.Client\**" />
+    <Compile Remove="J2534Remote.Example\**" />
+    <Compile Remove="J2534Remote.Server\**" />
+    <Compile Remove="J2534Remote.Shared\**" />
+    <Compile Remove="J2534Remote.UnmanagedClient\**" />
+    <EmbeddedResource Remove="J2534Remote.Client\**" />
+    <EmbeddedResource Remove="J2534Remote.Example\**" />
+    <EmbeddedResource Remove="J2534Remote.Server\**" />
+    <EmbeddedResource Remove="J2534Remote.Shared\**" />
+    <EmbeddedResource Remove="J2534Remote.UnmanagedClient\**" />
+    <None Remove="J2534Remote.Client\**" />
+    <None Remove="J2534Remote.Example\**" />
+    <None Remove="J2534Remote.Server\**" />
+    <None Remove="J2534Remote.Shared\**" />
+    <None Remove="J2534Remote.UnmanagedClient\**" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="APIFactory.cs" />
-    <Compile Include="Common\BoolInterlock.cs" />
-    <Compile Include="Common\EnumHelper.cs" />
-    <Compile Include="Common\UnmanagedDisposable.cs" />
-    <Compile Include="Common\ManagedDisposable.cs" />
-    <Compile Include="DataClasses\GetMessageResults.cs" />
-    <Compile Include="DataClasses\GetNextCarDAQResults.cs" />
-    <Compile Include="DataClasses\API_Signature.cs" />
-    <Compile Include="DataClasses\HeapIntPtr.cs" />
-    <Compile Include="DataClasses\HeapSByteArray.cs" />
-    <Compile Include="DataClasses\HeapSConfigArray.cs" />
-    <Compile Include="DataClasses\HeapSParamArray.cs" />
-    <Compile Include="DataClasses\HeapString.cs" />
-    <Compile Include="DataClasses\HeapStructArray.cs" />
-    <Compile Include="DataClasses\SConfig.cs" />
-    <Compile Include="DataClasses\SParam.cs" />
-    <Compile Include="Definitions\Const.cs" />
-    <Compile Include="Definitions\Baud.cs" />
-    <Compile Include="Definitions\ConnectFlag.cs" />
-    <Compile Include="Definitions\DeviceInfo.cs" />
-    <Compile Include="Definitions\DeviceParameter.cs" />
-    <Compile Include="Definitions\ProtocolInfo.cs" />
-    <Compile Include="Definitions\ResultCode.cs" />
-    <Compile Include="Definitions\Filter.cs" />
-    <Compile Include="Definitions\IOCTL.cs" />
-    <Compile Include="Definitions\Parameter.cs" />
-    <Compile Include="Definitions\Pin.cs" />
-    <Compile Include="Definitions\Protocol.cs" />
-    <Compile Include="Definitions\RxFlag.cs" />
-    <Compile Include="Definitions\TxFlag.cs" />
-    <Compile Include="Definitions\SAE_API.cs" />
-    <Compile Include="Definitions\UserFilterType.cs" />
-    <Compile Include="API_Delegates.cs" />
-    <Compile Include="API_GetDeviceList.cs" />
-    <Compile Include="API_Prototypes.cs" />
-    <Compile Include="DataClasses\HeapInt.cs" />
-    <Compile Include="DataClasses\HeapMessage.cs" />
-    <Compile Include="DataClasses\HeapMessageArray.cs" />
-    <Compile Include="DataClasses\Message.cs" />
-    <Compile Include="DataClasses\MessageFilter.cs" />
-    <Compile Include="DataClasses\PeriodicMessage.cs" />
-    <Compile Include="DataClasses\APIInfo.cs" />
-    <Compile Include="DataClasses\J2534Exception.cs" />
-    <Compile Include="API_v202Shim.cs" />
-    <Compile Include="Device.cs" />
-    <Compile Include="Channel.cs" />
-    <Compile Include="Definitions\DrewTech_API.cs" />
-    <Compile Include="API.cs" />
-    <Compile Include="NativeMethods.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="..\car-diagnostics-icon-01-.jpg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+  </ItemGroup>
+
 </Project>

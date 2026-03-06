@@ -20,34 +20,25 @@
 *SOFTWARE.
 */
 #endregion License
-using System;
 using System.Runtime.InteropServices;
-
 namespace SAE.J2534
 {
-    internal class HeapInt : Common.UnmanagedDisposable
+    [StructLayout(LayoutKind.Explicit)]
+    public struct SParam
     {
-        public IntPtr Ptr { get; }
-        public HeapInt() 
+        [FieldOffset(0), MarshalAs(UnmanagedType.U4)]
+        public DeviceInfo Parameter;
+        [FieldOffset(4), MarshalAs(UnmanagedType.U4)]
+        public int Value;
+        [FieldOffset(8), MarshalAs(UnmanagedType.U4)]
+        public int Supported;
+
+        public SParam(DeviceInfo parameter, int value, int supported)
         {
-            Ptr = Marshal.AllocHGlobal(4);
+            this.Parameter = parameter;
+            this.Value = value;
+            this.Supported = supported;
         }
-        public HeapInt(int i) : this()
-        {
-            Marshal.WriteInt32(Ptr, i);
-        }
-        public int Value
-        {
-            get { return Marshal.ReadInt32(Ptr); }
-            set { Marshal.WriteInt32(Ptr, value); }
-        }
-        public static explicit operator IntPtr(HeapInt HeapIntPtr)
-        {
-            return HeapIntPtr.Ptr;
-        }
-        protected override void DisposeUnmanaged()
-        {
-            Marshal.FreeHGlobal(Ptr);
-        }
+        public int Length => 12;
     }
 }
