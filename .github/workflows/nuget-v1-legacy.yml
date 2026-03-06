@@ -3,7 +3,7 @@ name: Build and Publish V1 Legacy
 on:
   push:
     branches:
-      - v1-legacy
+      - V1-legacy
     tags:
       - 'v1.*'
   workflow_dispatch:
