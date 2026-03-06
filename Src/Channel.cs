@@ -265,13 +265,14 @@ namespace SAE.J2534
         /// </summary>
         /// <param name="Parameter">Parameter to return</param>
         /// <returns>Parameter value</returns>
-        public int GetConfig(Parameter Parameter)
+        public int GetConfig(Parameter Parameter) => GetConfig(Parameter, IOCTL.GET_CONFIG);
+        public int GetConfig(Parameter Parameter, IOCTL IOCTL)
         {
             using (HeapSConfigArray hSConfigArray = new HeapSConfigArray(new SConfig(Parameter, 0)))
             {
                 lock (sync)
                 {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.GET_CONFIG, (IntPtr)hSConfigArray, IntPtr.Zero));
+                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL, (IntPtr)hSConfigArray, IntPtr.Zero));
                 }
                 return hSConfigArray[0].Value;
             }
@@ -281,13 +282,14 @@ namespace SAE.J2534
         /// </summary>
         /// <param name="Parameter">Parameter to set</param>
         /// <param name="Value">Parameter value</param>
-        public void SetConfig(Parameter Parameter, int Value)
+        public void SetConfig(Parameter Parameter, int Value) => SetConfig(Parameter, Value, IOCTL.SET_CONFIG);
+        public void SetConfig(Parameter Parameter, int Value, IOCTL IOCTL)
         {
             using (HeapSConfigArray hSConfigList = new HeapSConfigArray(new SConfig(Parameter, Value)))
             {
                 lock (sync)
                 {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.SET_CONFIG, (IntPtr)hSConfigList, IntPtr.Zero));
+                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL, (IntPtr)hSConfigList, IntPtr.Zero));
                 }
             }
         }
@@ -296,13 +298,14 @@ namespace SAE.J2534
         /// </summary>
         /// <param name="Parameter">List of parameters to get</param>
         /// <returns>Parameter list</returns>
-        public SConfig[] GetConfig(SConfig[] SConfig)
+        public SConfig[] GetConfig(SConfig[] SConfig) => GetConfig(SConfig, IOCTL.GET_CONFIG);
+        public SConfig[] GetConfig(SConfig[] SConfig, IOCTL IOCTL)
         {
             using (HeapSConfigArray hSConfigArray = new HeapSConfigArray(SConfig))
             {
                 lock (sync)
                 {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.GET_CONFIG, (IntPtr)hSConfigArray, IntPtr.Zero));
+                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL, (IntPtr)hSConfigArray, IntPtr.Zero));
                 }
                 return hSConfigArray.ToArray();
             }
@@ -311,13 +314,14 @@ namespace SAE.J2534
         /// Sets a list of configuration parameters for the channel
         /// </summary>
         /// <param name="Parameter">List of parameters to set</param>
-        public void SetConfig(SConfig[] SConfig)
+        public void SetConfig(SConfig[] SConfig) => SetConfig(SConfig, IOCTL.SET_CONFIG);
+        public void SetConfig(SConfig[] SConfig, IOCTL IOCTL)
         {
             using (HeapSConfigArray hSConfigList = new HeapSConfigArray(SConfig))
             {
                 lock (sync)
                 {
-                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL.SET_CONFIG, (IntPtr)hSConfigList, IntPtr.Zero));
+                    API.CheckResult(API.PTIoctl(channelId, (int)IOCTL, (IntPtr)hSConfigList, IntPtr.Zero));
                 }
             }
         }
