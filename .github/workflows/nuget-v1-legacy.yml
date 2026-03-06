@@ -21,12 +21,12 @@ jobs:
       
     - name: Setup NuGet
       uses: nuget/setup-nuget@v2
-      
+
     - name: Restore NuGet packages
-      run: nuget restore src\J2534-Sharp.csproj
-      
+      run: nuget restore J2534-Sharp.sln
+
     - name: Build solution
-      run: msbuild src\J2534-Sharp.csproj /p:Configuration=Release /p:Platform=AnyCPU
+      run: msbuild J2534-Sharp.sln /p:Configuration=Release /p:Platform="Any CPU"
       
     - name: Determine version
       id: version
