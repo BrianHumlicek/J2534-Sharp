@@ -22,6 +22,7 @@
 #endregion License
 using System;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
 using SAE.J2534.Interop;
 
 namespace SAE.J2534
@@ -38,6 +39,11 @@ namespace SAE.J2534
 
         public API_Signature Signature { get; }
         public string FileName => _fileName;
+
+        /// <summary>
+        /// Optional logger for API call tracing. Set this to enable detailed J2534 API logging.
+        /// </summary>
+        public Microsoft.Extensions.Logging.ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
         internal J2534API(string fileName)
         {
@@ -115,6 +121,9 @@ namespace SAE.J2534
 
         internal unsafe J2534Result<(int DeviceId, string DeviceName)> OpenDeviceInternal(string deviceName)
         {
+            var displayName = string.IsNullOrWhiteSpace(deviceName) ? "<default>" : deviceName;
+            Logger.LogTrace("PTOpen({DeviceName})", displayName);
+
             IntPtr pName = IntPtr.Zero;
             try
             {
@@ -125,8 +134,13 @@ namespace SAE.J2534
                 {
                     var result = PTOpen(pName, (IntPtr)(&deviceId));
                     if (result != ResultCode.STATUS_NOERROR)
+                    {
+                        Logger.LogError("PTOpen failed: {ResultCode} - {ErrorMessage}", 
+                            result, GetLastError());
                         return J2534Result<(int, string)>.Error(result, GetLastError());
+                    }
 
+                    Logger.LogTrace("   returning DeviceID {DeviceId}", deviceId);
                     return J2534Result<(int, string)>.Success((deviceId, deviceName));
                 }
             }
@@ -139,12 +153,19 @@ namespace SAE.J2534
 
         internal J2534Result CloseDeviceInternal(int deviceId)
         {
+            Logger.LogTrace("PTClose({DeviceId})", deviceId);
+
             lock (_syncRoot)
             {
                 var result = PTClose(deviceId);
-                return result == ResultCode.STATUS_NOERROR
-                    ? J2534Result.Success()
-                    : J2534Result.Error(result, GetLastError());
+
+                if (result != ResultCode.STATUS_NOERROR)
+                {
+                    Logger.LogError("PTClose failed: {ResultCode}", result);
+                    return J2534Result.Error(result, GetLastError());
+                }
+
+                return J2534Result.Success();
             }
         }
 

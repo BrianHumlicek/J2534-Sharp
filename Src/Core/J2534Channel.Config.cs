@@ -21,6 +21,7 @@
 */
 #endregion License
 using System;
+using Microsoft.Extensions.Logging;
 using SAE.J2534.Interop;
 
 namespace SAE.J2534
@@ -34,7 +35,10 @@ namespace SAE.J2534
         {
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Channel));
 
-            return NativeHelper.GetSingleConfig(parameter, 
+            Logger.LogTrace("PTIoctl({ChannelId}, {IoctlValue}:GET_CONFIG)\n   {ParamValue}:{Parameter}",
+                _channelId, (int)IOCTL.GET_CONFIG, (int)parameter, parameter);
+
+            var result = NativeHelper.GetSingleConfig(parameter, 
                 (input, output) =>
                 {
                     lock (_syncRoot)
@@ -42,6 +46,13 @@ namespace SAE.J2534
                         return _api.PTIoctl(_channelId, (int)IOCTL.GET_CONFIG, input, output);
                     }
                 });
+
+            if (result.IsError)
+                Logger.LogError("GET_CONFIG failed for {Parameter}: {ResultCode}", parameter, result.Status);
+            else
+                Logger.LogTrace("   {ParamValue}:{Parameter} = {Value:X8}", (int)parameter, parameter, result.Value);
+
+            return result;
         }
 
         /// <summary>
@@ -51,7 +62,10 @@ namespace SAE.J2534
         {
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Channel));
 
-            return NativeHelper.SetSingleConfig(parameter, value,
+            Logger.LogTrace("PTIoctl({ChannelId}, {IoctlValue}:SET_CONFIG)\n   1 parameter(s):\n   [1/1] {ParamValue}:{Parameter} = {Value:X8}",
+                _channelId, (int)IOCTL.SET_CONFIG, (int)parameter, parameter, value);
+
+            var result = NativeHelper.SetSingleConfig(parameter, value,
                 (input, output) =>
                 {
                     lock (_syncRoot)
@@ -59,6 +73,13 @@ namespace SAE.J2534
                         return _api.PTIoctl(_channelId, (int)IOCTL.SET_CONFIG, input, output);
                     }
                 });
+
+            if (result.IsError)
+                Logger.LogError("SET_CONFIG failed: {ResultCode}", result.Status);
+            else
+                Logger.LogTrace("   [1/1] {ParamValue}:{Parameter} = {Value:X8}", (int)parameter, parameter, value);
+
+            return result;
         }
 
         /// <summary>
@@ -68,7 +89,10 @@ namespace SAE.J2534
         {
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Channel));
 
-            return NativeHelper.GetMultipleConfig(parameters,
+            Logger.LogTrace("PTIoctl({ChannelId}, {IoctlValue}:GET_CONFIG)\n   {Count} parameter(s)",
+                _channelId, (int)IOCTL.GET_CONFIG, parameters.Length);
+
+            var result = NativeHelper.GetMultipleConfig(parameters,
                 (input, output) =>
                 {
                     lock (_syncRoot)
@@ -76,6 +100,11 @@ namespace SAE.J2534
                         return _api.PTIoctl(_channelId, (int)IOCTL.GET_CONFIG, input, output);
                     }
                 });
+
+            if (result.IsError)
+                Logger.LogError("GET_CONFIG (multi) failed: {ResultCode}", result.Status);
+
+            return result;
         }
 
         /// <summary>
@@ -85,7 +114,16 @@ namespace SAE.J2534
         {
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Channel));
 
-            return NativeHelper.SetMultipleConfig(parameters,
+            if (Logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Trace))
+            {
+                Logger.LogTrace("PTIoctl({ChannelId}, {IoctlValue}:SET_CONFIG)\n   {Count} parameter(s)",
+                    _channelId, (int)IOCTL.SET_CONFIG, parameters.Length);
+                for (int i = 0; i < parameters.Length; i++)
+                    Logger.LogTrace("   [{Index}/{Count}] {ParamValue}:{Parameter} = {Value:X8}",
+                        i + 1, parameters.Length, (int)parameters[i].Parameter, parameters[i].Parameter, parameters[i].Value);
+            }
+
+            var result = NativeHelper.SetMultipleConfig(parameters,
                 (input, output) =>
                 {
                     lock (_syncRoot)
@@ -93,6 +131,11 @@ namespace SAE.J2534
                         return _api.PTIoctl(_channelId, (int)IOCTL.SET_CONFIG, input, output);
                     }
                 });
+
+            if (result.IsError)
+                Logger.LogError("SET_CONFIG (multi) failed: {ResultCode}", result.Status);
+
+            return result;
         }
 
         /// <summary>
@@ -101,6 +144,9 @@ namespace SAE.J2534
         public J2534Result<byte[]> FiveBaudInit(byte targetAddress)
         {
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Channel));
+
+            Logger.LogTrace("PTIoctl({ChannelId}, {IoctlValue}:FIVE_BAUD_INIT) target=0x{TargetAddress:X2}",
+                _channelId, (int)IOCTL.FIVE_BAUD_INIT, targetAddress);
 
             unsafe
             {
@@ -119,11 +165,16 @@ namespace SAE.J2534
                 lock (_syncRoot)
                 {
                     var result = _api.PTIoctl(_channelId, (int)IOCTL.FIVE_BAUD_INIT, (IntPtr)inputBuffer, (IntPtr)outputBuffer);
-                    
-                    if (result != ResultCode.STATUS_NOERROR)
-                        return J2534Result<byte[]>.Error(result, _api.GetLastError());
 
-                    return J2534Result<byte[]>.Success(new byte[] { outputBuffer[8], outputBuffer[9] });
+                    if (result != ResultCode.STATUS_NOERROR)
+                    {
+                        Logger.LogError("FIVE_BAUD_INIT failed: {ResultCode}", result);
+                        return J2534Result<byte[]>.Error(result, _api.GetLastError());
+                    }
+
+                    var keywords = new byte[] { outputBuffer[8], outputBuffer[9] };
+                    Logger.LogTrace("   Keywords: {KW1:X2} {KW2:X2}", keywords[0], keywords[1]);
+                    return J2534Result<byte[]>.Success(keywords);
                 }
             }
         }
@@ -136,6 +187,11 @@ namespace SAE.J2534
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Channel));
             if (txMessage.Data == null) throw new ArgumentNullException(nameof(txMessage));
 
+            Logger.LogTrace("PTIoctl({ChannelId}, {IoctlValue}:FAST_INIT)\n   {DataLength} bytes. TxF={TxFlags:X8}\n   TxFlags: {TxFlagsFormatted}\n{HexData}",
+                _channelId, (int)IOCTL.FAST_INIT,
+                txMessage.Data.Length, (int)txMessage.TxFlags, new TxFlagsFormatter(txMessage.TxFlags),
+                new HexFormatter(txMessage.Data));
+
             using var inputBuffer = new NativeMessageBuffer(Protocol, 1);
             using var outputBuffer = new NativeMessageBuffer(Protocol, 1);
 
@@ -144,11 +200,17 @@ namespace SAE.J2534
             lock (_syncRoot)
             {
                 var result = _api.PTIoctl(_channelId, (int)IOCTL.FAST_INIT, inputBuffer.GetMessagePointer(), outputBuffer.GetMessagePointer());
-                
-                if (result != ResultCode.STATUS_NOERROR)
-                    return J2534Result<Message>.Error(result, _api.GetLastError());
 
-                return J2534Result<Message>.Success(outputBuffer.ReadMessage(0));
+                if (result != ResultCode.STATUS_NOERROR)
+                {
+                    Logger.LogError("FAST_INIT failed: {ResultCode}", result);
+                    return J2534Result<Message>.Error(result, _api.GetLastError());
+                }
+
+                var response = outputBuffer.ReadMessage(0);
+                Logger.LogTrace("   Response: {DataLength} bytes\n{HexData}",
+                    response.Data.Length, new HexFormatter(response.Data));
+                return J2534Result<Message>.Success(response);
             }
         }
 
@@ -159,9 +221,14 @@ namespace SAE.J2534
         {
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Channel));
 
+            Logger.LogTrace("PTIoctl({ChannelId}, {IoctlValue}:CLEAR_FUNCT_MSG_LOOKUP_TABLE)",
+                _channelId, (int)IOCTL.CLEAR_FUNCT_MSG_LOOKUP_TABLE);
+
             lock (_syncRoot)
             {
                 var result = _api.PTIoctl(_channelId, (int)IOCTL.CLEAR_FUNCT_MSG_LOOKUP_TABLE, IntPtr.Zero, IntPtr.Zero);
+                if (result != ResultCode.STATUS_NOERROR)
+                    Logger.LogError("CLEAR_FUNCT_MSG_LOOKUP_TABLE failed: {ResultCode}", result);
                 return result == ResultCode.STATUS_NOERROR
                     ? J2534Result.Success()
                     : J2534Result.Error(result, _api.GetLastError());
@@ -175,6 +242,9 @@ namespace SAE.J2534
         {
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Channel));
 
+            Logger.LogTrace("PTIoctl({ChannelId}, {IoctlValue}:ADD_TO_FUNCT_MSG_LOOKUP_TABLE) address=0x{Address:X2}",
+                _channelId, (int)IOCTL.ADD_TO_FUNCT_MSG_LOOKUP_TABLE, address);
+
             unsafe
             {
                 byte* buffer = stackalloc byte[9];
@@ -185,6 +255,8 @@ namespace SAE.J2534
                 lock (_syncRoot)
                 {
                     var result = _api.PTIoctl(_channelId, (int)IOCTL.ADD_TO_FUNCT_MSG_LOOKUP_TABLE, (IntPtr)buffer, IntPtr.Zero);
+                    if (result != ResultCode.STATUS_NOERROR)
+                        Logger.LogError("ADD_TO_FUNCT_MSG_LOOKUP_TABLE failed: {ResultCode}", result);
                     return result == ResultCode.STATUS_NOERROR
                         ? J2534Result.Success()
                         : J2534Result.Error(result, _api.GetLastError());
@@ -200,6 +272,9 @@ namespace SAE.J2534
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Channel));
             if (addresses.Length == 0) return J2534Result.Success();
 
+            Logger.LogTrace("PTIoctl({ChannelId}, {IoctlValue}:ADD_TO_FUNCT_MSG_LOOKUP_TABLE) {Count} address(es)",
+                _channelId, (int)IOCTL.ADD_TO_FUNCT_MSG_LOOKUP_TABLE, addresses.Length);
+
             unsafe
             {
                 byte* buffer = stackalloc byte[8 + addresses.Length];
@@ -210,6 +285,8 @@ namespace SAE.J2534
                 lock (_syncRoot)
                 {
                     var result = _api.PTIoctl(_channelId, (int)IOCTL.ADD_TO_FUNCT_MSG_LOOKUP_TABLE, (IntPtr)buffer, IntPtr.Zero);
+                    if (result != ResultCode.STATUS_NOERROR)
+                        Logger.LogError("ADD_TO_FUNCT_MSG_LOOKUP_TABLE (multi) failed: {ResultCode}", result);
                     return result == ResultCode.STATUS_NOERROR
                         ? J2534Result.Success()
                         : J2534Result.Error(result, _api.GetLastError());
@@ -224,6 +301,9 @@ namespace SAE.J2534
         {
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Channel));
 
+            Logger.LogTrace("PTIoctl({ChannelId}, {IoctlValue}:DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE) address=0x{Address:X2}",
+                _channelId, (int)IOCTL.DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE, address);
+
             unsafe
             {
                 byte* buffer = stackalloc byte[9];
@@ -234,6 +314,8 @@ namespace SAE.J2534
                 lock (_syncRoot)
                 {
                     var result = _api.PTIoctl(_channelId, (int)IOCTL.DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE, (IntPtr)buffer, IntPtr.Zero);
+                    if (result != ResultCode.STATUS_NOERROR)
+                        Logger.LogError("DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE failed: {ResultCode}", result);
                     return result == ResultCode.STATUS_NOERROR
                         ? J2534Result.Success()
                         : J2534Result.Error(result, _api.GetLastError());
@@ -249,6 +331,9 @@ namespace SAE.J2534
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Channel));
             if (addresses.Length == 0) return J2534Result.Success();
 
+            Logger.LogTrace("PTIoctl({ChannelId}, {IoctlValue}:DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE) {Count} address(es)",
+                _channelId, (int)IOCTL.DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE, addresses.Length);
+
             unsafe
             {
                 byte* buffer = stackalloc byte[8 + addresses.Length];
@@ -259,6 +344,8 @@ namespace SAE.J2534
                 lock (_syncRoot)
                 {
                     var result = _api.PTIoctl(_channelId, (int)IOCTL.DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE, (IntPtr)buffer, IntPtr.Zero);
+                    if (result != ResultCode.STATUS_NOERROR)
+                        Logger.LogError("DELETE_FROM_FUNCT_MSG_LOOKUP_TABLE (multi) failed: {ResultCode}", result);
                     return result == ResultCode.STATUS_NOERROR
                         ? J2534Result.Success()
                         : J2534Result.Error(result, _api.GetLastError());

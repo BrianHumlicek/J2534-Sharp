@@ -20,6 +20,7 @@
 *SOFTWARE.
 */
 #endregion License
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -41,12 +42,20 @@ namespace SAE.J2534
         public string DriverVersion { get; }
         public string ApiVersion { get; }
 
+        /// <summary>
+        /// Optional logger for API call tracing. Set this to enable detailed J2534 API logging.
+        /// </summary>
+        public ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+
         internal J2534Device(J2534API api, int deviceId, string deviceName, object syncRoot)
         {
             _api = api;
             _deviceId = deviceId;
             DeviceName = deviceName;
             _syncRoot = syncRoot;
+
+            // Inherit logger from API
+            Logger = api.Logger;
 
             // Read version information
             var versionResult = ReadVersionInfo();
@@ -69,21 +78,35 @@ namespace SAE.J2534
         {
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Device));
 
+            if (Logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Trace))
+            {
+                Logger.LogTrace("PTConnect({DeviceId}, {ProtocolValue}:{Protocol}, {FlagsValue}, {BaudRate})\n   Flags: {ConnectFlagsFormatted}",
+                    _deviceId, (int)protocol, protocol, (int)connectFlags, baudRate, new ConnectFlagsFormatter(connectFlags));
+            }
+
             unsafe
             {
                 int channelId;
-                
+
                 lock (_syncRoot)
                 {
                     var result = _api.PTConnect(_deviceId, (int)protocol, (int)connectFlags, (int)baudRate, (IntPtr)(&channelId));
-                    
+
                     if (result != ResultCode.STATUS_NOERROR)
+                    {
+                        Logger.LogError("PTConnect failed: {ResultCode} - {ErrorMessage}",
+                            result, _api.GetLastError());
                         return J2534Result<J2534Channel>.Error(result, _api.GetLastError());
+                    }
+
+                    if (Logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Trace))
+                        Logger.LogTrace("   returning ChannelID {ChannelId}", channelId);
                 }
 
                 var channel = new J2534Channel(_api, this, channelId, protocol, baudRate, connectFlags, _syncRoot);
+                channel.Logger = Logger;
                 _channels.Add(channel);
-                
+
                 return J2534Result<J2534Channel>.Success(channel);
             }
         }
@@ -91,16 +114,29 @@ namespace SAE.J2534
         /// <summary>
         /// Sets programming voltage on a specific pin.
         /// </summary>
+        public J2534Result SetProgrammingVoltage(Pin pin, ProgrammingVoltage voltage) => SetProgrammingVoltage(pin, (int)voltage);
+        /// <summary>
+        /// Sets programming voltage on a specific pin.
+        /// </summary>
         public J2534Result SetProgrammingVoltage(Pin pin, int voltageMillivolts)
         {
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Device));
 
+            Logger.LogTrace("PTSetProgrammingVoltage({DeviceId}, {PinValue}:{Pin}, {VoltageMillivolts})",
+                _deviceId, (int)pin, pin, voltageMillivolts);
+
             lock (_syncRoot)
             {
                 var result = _api.PTSetProgrammingVoltage(_deviceId, (int)pin, voltageMillivolts);
-                return result == ResultCode.STATUS_NOERROR
-                    ? J2534Result.Success()
-                    : J2534Result.Error(result, _api.GetLastError());
+
+                if (result != ResultCode.STATUS_NOERROR)
+                {
+                    Logger.LogError("PTSetProgrammingVoltage failed: {ResultCode}", result);
+                    return J2534Result.Error(result, _api.GetLastError());
+                }
+
+                Logger.LogTrace("   Programming voltage set successfully");
+                return J2534Result.Success();
             }
         }
 
@@ -111,15 +147,23 @@ namespace SAE.J2534
         {
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Device));
 
+            Logger.LogTrace("PTIoctl({DeviceId}, {IoctlValue}:READ_VBATT, 00000000, ...)", _deviceId, (int)IOCTL.READ_VBATT);
+
             unsafe
             {
                 int voltage;
                 lock (_syncRoot)
                 {
                     var result = _api.PTIoctl(_deviceId, (int)IOCTL.READ_VBATT, IntPtr.Zero, (IntPtr)(&voltage));
-                    return result == ResultCode.STATUS_NOERROR
-                        ? J2534Result<int>.Success(voltage)
-                        : J2534Result<int>.Error(result, _api.GetLastError());
+
+                    if (result != ResultCode.STATUS_NOERROR)
+                    {
+                        Logger.LogError("READ_VBATT failed: {ResultCode}", result);
+                        return J2534Result<int>.Error(result, _api.GetLastError());
+                    }
+
+                    Logger.LogTrace("   Battery Voltage {Voltage:F6} V", voltage / 1000.0);
+                    return J2534Result<int>.Success(voltage);
                 }
             }
         }
@@ -131,15 +175,23 @@ namespace SAE.J2534
         {
             if (_disposed) throw new ObjectDisposedException(nameof(J2534Device));
 
+            Logger.LogTrace("PTIoctl(DeviceId={DeviceId}, IOCTL=READ_PROG_VOLTAGE)", _deviceId);
+
             unsafe
             {
                 int voltage;
                 lock (_syncRoot)
                 {
                     var result = _api.PTIoctl(_deviceId, (int)IOCTL.READ_PROG_VOLTAGE, IntPtr.Zero, (IntPtr)(&voltage));
-                    return result == ResultCode.STATUS_NOERROR
-                        ? J2534Result<int>.Success(voltage)
-                        : J2534Result<int>.Error(result, _api.GetLastError());
+
+                    if (result != ResultCode.STATUS_NOERROR)
+                    {
+                        Logger.LogError("READ_PROG_VOLTAGE failed: {ResultCode}", result);
+                        return J2534Result<int>.Error(result, _api.GetLastError());
+                    }
+
+                    Logger.LogTrace("READ_PROG_VOLTAGE: {VoltageMillivolts}mV", voltage);
+                    return J2534Result<int>.Success(voltage);
                 }
             }
         }
